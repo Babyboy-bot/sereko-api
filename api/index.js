@@ -1,13 +1,8 @@
 module.exports = (req, res) => {
-    console.log(`Requête reçue : ${req.method} ${req.url}`);
-    
-    // Logs de débogage
-    console.log('Headers reçus :', req.headers);
-
-    // Configuration des headers CORS les plus permissifs
+    // Configuration des headers CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', '*');
-    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     // Gestion des requêtes OPTIONS
     if (req.method === 'OPTIONS') {
@@ -15,10 +10,9 @@ module.exports = (req, res) => {
         return;
     }
 
-    // Routes principales avec logs
+    // Routes principales
     switch (req.url) {
         case '/health':
-            console.log('Route /health atteinte');
             res.status(200).json({ 
                 status: 'OK', 
                 message: 'Séréko API est en ligne',
@@ -27,14 +21,12 @@ module.exports = (req, res) => {
             break;
         case '/':
         case '':
-            console.log('Route racine atteinte');
             res.status(200).json({ 
                 message: 'Bienvenue sur Séréko API',
                 version: '1.0.0'
             });
             break;
         default:
-            console.log(`Route non trouvée : ${req.url}`);
             res.status(404).json({ 
                 error: 'Route non trouvée', 
                 path: req.url 
