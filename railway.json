@@ -1,0 +1,20 @@
+{
+    "version": 2,
+    "name": "sereko-api",
+    "builds": [
+        {
+            "src": "server.js",
+            "use": "@railway/node"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "server.js"
+        }
+    ],
+    "env": {
+        "NODE_ENV": "production",
+        "PORT": "$PORT"
+    }
+}
