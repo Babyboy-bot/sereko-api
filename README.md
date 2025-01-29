@@ -225,3 +225,11 @@ Please read CONTRIBUTING.md for details on our code of conduct and the process f
 ## License
 
 This project is licensed under the MIT License - see the LICENSE.md file for details.
+
+# Séréko API
+
+Déploiement sur Render en cours.
+
+## Mise à jour
+- Déploiement automatique configuré
+- Prêt pour le développement
