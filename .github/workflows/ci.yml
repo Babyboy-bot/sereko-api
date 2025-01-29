@@ -2,21 +2,21 @@ name: Séréko CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Utiliser Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '18'
     
     - name: Installer les dépendances
       run: npm ci
@@ -25,20 +25,20 @@ jobs:
       run: npm run lint
     
     - name: Tests
-      run: npm test
       env:
         CI: true
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
         PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
+      run: npm test
 
     - name: Build Docker Image
       run: docker build -t sereko-api .
 
-    - name: Deploy to Railway
-      if: github.ref == 'refs/heads/main'
+    - name: Deploy to Vercel
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       run: |
-        npm install -g @railway/cli
-        railway login --token ${{ secrets.RAILWAY_TOKEN }}
-        railway link ${{ secrets.RAILWAY_PROJECT }}
-        railway up
+        npm install -g vercel
+        vercel deploy --token=$VERCEL_TOKEN --project=$VERCEL_PROJECT_ID
