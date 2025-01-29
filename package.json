@@ -4,6 +4,7 @@
   "description": "Service marketplace platform connecting individuals with service providers in Côte d'Ivoire",
   "main": "server.js",
   "scripts": {
+    "env:check": "node scripts/env-check.js",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'No build step needed'",

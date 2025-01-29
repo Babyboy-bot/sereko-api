@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticateUser, authorizeRole } = require('../middleware/authMiddleware');
-const PaiementController = require('../controllers/paymentController');
+const { PaiementController, PaymentController } = require('../controllers/paymentController');
 
 const router = express.Router();
 
@@ -13,5 +13,9 @@ router.post('/initialiser',
 
 // Webhook public pour Paystack
 router.post('/webhook', PaiementController.webhookPaystack);
+
+// Nouvelles routes Wave
+router.post('/wave/initiate', PaymentController.processWavePayment);
+router.get('/wave/verify/:transactionId', PaymentController.verifyWavePayment);
 
 module.exports = router;

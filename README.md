@@ -51,9 +51,41 @@ Séréko is a SaaS platform designed to connect individuals with service provide
 - Compte Firebase
 - Compte Paystack
 
-### Configuration de l'environnement
-1. Copiez `.env.example` vers `.env`
-2. Remplissez les variables d'environnement
+### Configuration des Variables d'Environnement
+
+### Prérequis
+- Node.js (version 14+)
+- Compte Wave
+- Compte Firebase
+- Base de données PostgreSQL
+
+### Étapes de Configuration
+
+1. Copier le fichier `.env.example`
+```bash
+cp .env.example .env
+```
+
+2. Remplir les variables dans `.env`
+- `WAVE_API_KEY` : Clé API obtenue depuis Wave
+- `FIREBASE_PRIVATE_KEY` : Clé privée Firebase
+- `DATABASE_URL` : URL de connexion PostgreSQL
+- Autres variables sensibles
+
+3. Obtenir les clés API
+- Wave : Contactez le support Wave
+- Firebase : Console Firebase
+- Base de données : Votre fournisseur PostgreSQL
+
+### Sécurité
+- Ne jamais commiter le fichier `.env`
+- Utiliser `.env.example` comme modèle
+- Protéger vos clés API
+
+### Vérification
+```bash
+npm run env:check
+```
 
 ### Installation locale
 ```bash
@@ -74,8 +106,8 @@ docker run -p 3000:3000 sereko-api
 ## Déploiement sur Vercel
 
 ### Prérequis
-- Compte GitHub
 - Compte Vercel
+- Compte GitHub
 - Variables d'environnement configurées
 
 ### Étapes de Déploiement
@@ -84,25 +116,25 @@ docker run -p 3000:3000 sereko-api
 3. Configurez les variables d'environnement :
    - `DATABASE_URL`
    - `FIREBASE_PROJECT_ID`
-   - `PAYSTACK_SECRET_KEY`
-   - Autres variables sensibles
-
-### Variables d'Environnement Requises
-- `DATABASE_URL`: URL de connexion PostgreSQL
-- `FIREBASE_PROJECT_ID`: ID du projet Firebase
-- `FIREBASE_PRIVATE_KEY`: Clé privée Firebase
-- `PAYSTACK_SECRET_KEY`: Clé secrète Paystack
-- `JWT_SECRET`: Clé secrète pour JWT
-- `NODE_ENV`: `production`
+   - `FIREBASE_PRIVATE_KEY`
+   - `JWT_SECRET`
 
 ### Commandes Vercel
 ```bash
+# Installation CLI Vercel
+npm install -g vercel
+
 # Déploiement
 vercel
 
 # Déploiement de production
 vercel --prod
 ```
+
+### Configuration Automatique
+- Déploiement automatique activé
+- Région : Europe (CDG1)
+- Build : Automatique via Node.js
 
 ## Déploiement sur Railway
 

@@ -2,6 +2,7 @@ const PaymentService = require('../services/paymentService');
 const PaiementModel = require('../models/paymentModel');
 const ReservationModel = require('../models/bookingModel');
 const winston = require('winston');
+const WavePaymentService = require('../services/wavePaymentService');
 
 class PaiementController {
   static async initialiserPaiement(req, res) {
@@ -88,4 +89,65 @@ class PaiementController {
   }
 }
 
-module.exports = PaiementController;
+class PaymentController {
+  constructor() {
+    this.waveService = new WavePaymentService(process.env.WAVE_API_KEY);
+  }
+
+  async processWavePayment(req, res) {
+    const { amount, userPhone, description } = req.body;
+
+    try {
+      const paymentResult = await this.waveService.initiatePayment(
+        amount, 
+        userPhone, 
+        description
+      );
+
+      if (paymentResult.success) {
+        res.status(200).json({
+          message: 'Payment initiated successfully',
+          transactionId: paymentResult.transactionId
+        });
+      } else {
+        res.status(400).json({
+          message: 'Payment failed',
+          error: paymentResult.error
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
+
+  async verifyWavePayment(req, res) {
+    const { transactionId } = req.params;
+
+    try {
+      const verificationResult = await this.waveService.verifyPayment(transactionId);
+
+      if (verificationResult.success) {
+        res.status(200).json({
+          message: 'Payment verified',
+          status: verificationResult.status,
+          amount: verificationResult.amount
+        });
+      } else {
+        res.status(400).json({
+          message: 'Payment verification failed',
+          error: verificationResult.error
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
+}
+
+module.exports = { PaiementController, PaymentController: new PaymentController() };

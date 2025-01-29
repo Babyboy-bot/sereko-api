@@ -13,9 +13,15 @@
         }
     ],
     "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "DATABASE_URL": "@sereko_database_url",
+        "FIREBASE_PROJECT_ID": "@firebase_project_id",
+        "FIREBASE_PRIVATE_KEY": "@firebase_private_key",
+        "JWT_SECRET": "@jwt_secret"
     },
-    "buildCommand": "npm install && npm run migrate",
-    "outputDirectory": ".",
-    "framework": "express"
+    "regions": ["cdg1"],
+    "github": {
+        "enabled": true,
+        "autoDeploy": true
+    }
 }
