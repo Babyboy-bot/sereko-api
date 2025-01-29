@@ -1,23 +1,44 @@
 {
     "version": 2,
+    "name": "sereko-api",
     "builds": [
         { 
             "src": "server.js", 
-            "use": "@vercel/node" 
+            "use": "@vercel/node",
+            "config": {
+                "includeFiles": [
+                    "src/**",
+                    "package.json"
+                ]
+            }
         }
     ],
     "routes": [
         { 
-            "src": "/(.*)", 
+            "src": "/api/(.*)", 
             "dest": "server.js" 
+        },
+        {
+            "src": "/health",
+            "dest": "server.js"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "server.js",
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization"
+            }
         }
     ],
     "env": {
         "NODE_ENV": "production",
-        "DATABASE_URL": "@sereko_database_url",
+        "DATABASE_URL": "@database_url",
+        "JWT_SECRET": "@jwt_secret",
         "FIREBASE_PROJECT_ID": "@firebase_project_id",
         "FIREBASE_PRIVATE_KEY": "@firebase_private_key",
-        "JWT_SECRET": "@jwt_secret"
+        "FIREBASE_CLIENT_EMAIL": "@firebase_client_email"
     },
     "regions": ["cdg1"],
     "github": {

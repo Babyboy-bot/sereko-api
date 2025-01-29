@@ -1,80 +1,126 @@
 require('dotenv').config();
 const express = require('express');
-const winston = require('winston');
-const { initializeFirebase } = require('./src/services/firebaseService');
-const { connectDatabase } = require('./src/services/databaseService');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { logger } = require('./src/utils/errorHandler');
 
-// Configure logging
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' })
-  ]
-});
+// Services
+const firebaseService = require('./src/services/firebaseService');
+const databaseService = require('./src/services/databaseService');
+
+// Middlewares
+const errorHandler = require('./src/middlewares/errorMiddleware');
+const authMiddleware = require('./src/middlewares/authMiddleware');
+
+// Routes
+const userRoutes = require('./src/routes/userRoutes');
+const serviceRoutes = require('./src/routes/serviceRoutes');
+const reservationRoutes = require('./src/routes/reservationRoutes');
 
 const app = express();
+
+// Configuration globale
 const PORT = process.env.PORT || 3000;
+const ENVIRONMENT = process.env.NODE_ENV || 'development';
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middleware de sécurité
+app.use(helmet());
 
-// Initialize services
-async function startServer() {
-  try {
-    // Initialize Firebase
-    initializeFirebase();
+// Configuration CORS
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
+app.use(cors(corsOptions));
 
-    // Connect to Database
-    await connectDatabase();
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+    message: 'Trop de requêtes, veuillez réessayer plus tard'
+});
+app.use(limiter);
 
-    // Import routes
-    const userRoutes = require('./src/routes/userRoutes');
-    const serviceRoutes = require('./src/routes/serviceRoutes');
-    const bookingRoutes = require('./src/routes/bookingRoutes');
-    const paymentRoutes = require('./src/routes/paymentRoutes');
-    const notificationRoutes = require('./src/routes/notificationRoutes');
+// Parsers
+app.use(express.json({ 
+    limit: '10mb',
+    verify: (req, res, buf) => {
+        try {
+            JSON.parse(buf.toString());
+        } catch (e) {
+            res.status(400).json({ error: 'Invalid JSON' });
+        }
+    }
+}));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-    // Use routes
-    app.use('/api/users', userRoutes);
-    app.use('/api/services', serviceRoutes);
-    app.use('/api/bookings', bookingRoutes);
-    app.use('/api/payments', paymentRoutes);
-    app.use('/api/notifications', notificationRoutes);
-
-    // Endpoint de santé pour le monitoring
-    app.get('/api/health', (req, res) => {
-      res.status(200).json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV
-      });
-    });
-
-    // Global error handler
-    app.use((err, req, res, next) => {
-      logger.error(err.stack);
-      res.status(500).json({
-        status: 'error',
-        message: 'Something went wrong!'
-      });
-    });
-
-    // Start server
-    app.listen(PORT, () => {
-      logger.info(`Séréko server running on port ${PORT}`);
-    });
-  } catch (error) {
-    logger.error('Failed to start server', error);
-    process.exit(1);
-  }
+// Initialisation des services
+async function initializeServices() {
+    try {
+        await databaseService.connect();
+        firebaseService.initialize();
+        logger.info('✅ Services initialisés avec succès');
+    } catch (error) {
+        logger.error('❌ Échec de l\'initialisation des services', error);
+        process.exit(1);
+    }
 }
 
-startServer();
+// Routes
+app.use('/api/users', userRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/reservations', reservationRoutes);
+
+// Route de test
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'OK', 
+        environment: ENVIRONMENT,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Gestion des routes non trouvées
+app.use((req, res, next) => {
+    res.status(404).json({ 
+        error: 'Route non trouvée', 
+        path: req.path 
+    });
+});
+
+// Middleware de gestion des erreurs
+app.use(errorHandler);
+
+// Démarrage du serveur
+async function startServer() {
+    try {
+        await initializeServices();
+        
+        const server = app.listen(PORT, () => {
+            logger.info(`🚀 Serveur démarré sur le port ${PORT}`);
+            logger.info(`🌍 Environnement : ${ENVIRONMENT}`);
+        });
+
+        // Gestion des arrêts serveur
+        process.on('SIGTERM', () => {
+            logger.info('🔌 Arrêt du serveur en cours...');
+            server.close(() => {
+                databaseService.close();
+                process.exit(0);
+            });
+        });
+    } catch (error) {
+        logger.error('❌ Échec du démarrage du serveur', error);
+        process.exit(1);
+    }
+}
+
+// Démarrage conditionnel
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = app;
