@@ -71,6 +71,75 @@ docker run -p 3000:3000 sereko-api
 ### Déploiement sur Railway
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/YOUR_TEMPLATE_ID)
 
+## Déploiement sur Railway
+
+### Prérequis
+- Compte GitHub
+- Compte Railway
+- Compte Firebase
+- Compte Paystack
+
+### Étapes de Déploiement
+
+1. **Connexion à Railway**
+   - Créez un compte sur [Railway](https://railway.app/)
+   - Connectez votre compte GitHub
+
+2. **Configuration du Projet**
+   - Créez un nouveau projet Railway
+   - Sélectionnez "Deploy from GitHub repo"
+   - Choisissez votre dépôt Séréko
+
+3. **Services Requis**
+   - Ajoutez un service PostgreSQL
+   - Copiez l'URL de connexion générée
+
+4. **Variables d'Environnement**
+   Configurez les variables suivantes dans Railway :
+   ```
+   DATABASE_URL = postgresql://...
+   FIREBASE_PROJECT_ID = votre_id_projet
+   FIREBASE_PRIVATE_KEY = votre_clé_privée
+   FIREBASE_CLIENT_EMAIL = votre_email_client
+   PAYSTACK_SECRET_KEY = votre_clé_secrète_paystack
+   PAYSTACK_PUBLIC_KEY = votre_clé_publique_paystack
+   EMAIL_HOST = smtp.gmail.com
+   EMAIL_PORT = 587
+   EMAIL_USER = votre_email
+   EMAIL_PASS = votre_mot_de_passe_app
+   JWT_SECRET = générez_une_longue_chaîne_aléatoire
+   NODE_ENV = production
+   ```
+
+5. **Déploiement**
+   - Railway détectera automatiquement le `railway.toml`
+   - Construction et déploiement automatiques
+
+### Commandes Utiles
+
+```bash
+# Installation des dépendances
+npm install
+
+# Exécuter les migrations
+npm run migrate
+
+# Démarrer le serveur en développement
+npm run dev
+
+# Lancer les tests
+npm test
+```
+
+### Sécurité
+- Gardez vos clés secrètes privées
+- Utilisez des variables d'environnement
+- Activez 2FA sur Railway
+
+### Monitoring
+- Endpoint de santé : `/api/health`
+- Vérifiez les logs dans Railway
+
 ## Tests
 ```bash
 npm test         # Exécuter tous les tests
