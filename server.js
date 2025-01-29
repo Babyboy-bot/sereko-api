@@ -2,21 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const { logger } = require('./src/utils/errorHandler');
-
-// Services
-const firebaseService = require('./src/services/firebaseService');
-const databaseService = require('./src/services/databaseService');
-
-// Middlewares
-const errorHandler = require('./src/middlewares/errorMiddleware');
-const authMiddleware = require('./src/middlewares/authMiddleware');
-
-// Routes
-const userRoutes = require('./src/routes/userRoutes');
-const serviceRoutes = require('./src/routes/serviceRoutes');
-const reservationRoutes = require('./src/routes/reservationRoutes');
 
 const app = express();
 
@@ -24,57 +10,21 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ENVIRONMENT = process.env.NODE_ENV || 'development';
 
-// Middleware de sécurité
-app.use(helmet());
-
-// Configuration CORS
-const corsOptions = {
-    origin: process.env.CORS_ORIGIN || '*',
+// Middleware CORS ultra-permissif pour Vercel
+app.use(cors({
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-};
-app.use(cors(corsOptions));
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
-    message: 'Trop de requêtes, veuillez réessayer plus tard'
-});
-app.use(limiter);
+// Middleware de sécurité minimal
+app.use(helmet.permissive());
 
 // Parsers
-app.use(express.json({ 
-    limit: '10mb',
-    verify: (req, res, buf) => {
-        try {
-            JSON.parse(buf.toString());
-        } catch (e) {
-            res.status(400).json({ error: 'Invalid JSON' });
-        }
-    }
-}));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Initialisation des services
-async function initializeServices() {
-    try {
-        await databaseService.connect();
-        firebaseService.initialize();
-        logger.info('✅ Services initialisés avec succès');
-    } catch (error) {
-        logger.error('❌ Échec de l\'initialisation des services', error);
-        process.exit(1);
-    }
-}
-
-// Routes
-app.use('/api/users', userRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/reservations', reservationRoutes);
-
-// Route de test
+// Route de santé publique
 app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
@@ -83,34 +33,28 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Route de base publique
+app.get('/', (req, res) => {
+    res.status(200).json({ 
+        message: 'Séréko API is running',
+        environment: ENVIRONMENT
+    });
+});
+
 // Gestion des routes non trouvées
-app.use((req, res, next) => {
+app.use((req, res) => {
     res.status(404).json({ 
         error: 'Route non trouvée', 
         path: req.path 
     });
 });
 
-// Middleware de gestion des erreurs
-app.use(errorHandler);
-
 // Démarrage du serveur
-async function startServer() {
+function startServer() {
     try {
-        await initializeServices();
-        
         const server = app.listen(PORT, () => {
             logger.info(`🚀 Serveur démarré sur le port ${PORT}`);
             logger.info(`🌍 Environnement : ${ENVIRONMENT}`);
-        });
-
-        // Gestion des arrêts serveur
-        process.on('SIGTERM', () => {
-            logger.info('🔌 Arrêt du serveur en cours...');
-            server.close(() => {
-                databaseService.close();
-                process.exit(0);
-            });
         });
     } catch (error) {
         logger.error('❌ Échec du démarrage du serveur', error);
