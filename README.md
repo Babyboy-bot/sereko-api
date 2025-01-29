@@ -71,6 +71,39 @@ docker run -p 3000:3000 sereko-api
 ### Déploiement sur Railway
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/YOUR_TEMPLATE_ID)
 
+## Déploiement sur Vercel
+
+### Prérequis
+- Compte GitHub
+- Compte Vercel
+- Variables d'environnement configurées
+
+### Étapes de Déploiement
+1. Connectez votre compte GitHub à Vercel
+2. Importez le dépôt `sereko-api`
+3. Configurez les variables d'environnement :
+   - `DATABASE_URL`
+   - `FIREBASE_PROJECT_ID`
+   - `PAYSTACK_SECRET_KEY`
+   - Autres variables sensibles
+
+### Variables d'Environnement Requises
+- `DATABASE_URL`: URL de connexion PostgreSQL
+- `FIREBASE_PROJECT_ID`: ID du projet Firebase
+- `FIREBASE_PRIVATE_KEY`: Clé privée Firebase
+- `PAYSTACK_SECRET_KEY`: Clé secrète Paystack
+- `JWT_SECRET`: Clé secrète pour JWT
+- `NODE_ENV`: `production`
+
+### Commandes Vercel
+```bash
+# Déploiement
+vercel
+
+# Déploiement de production
+vercel --prod
+```
+
 ## Déploiement sur Railway
 
 ### Prérequis
