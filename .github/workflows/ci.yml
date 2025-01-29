@@ -1,0 +1,44 @@
+name: Séréko CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Utiliser Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+    
+    - name: Installer les dépendances
+      run: npm ci
+    
+    - name: Linter
+      run: npm run lint
+    
+    - name: Tests
+      run: npm test
+      env:
+        CI: true
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
+        PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
+
+    - name: Build Docker Image
+      run: docker build -t sereko-api .
+
+    - name: Deploy to Railway
+      if: github.ref == 'refs/heads/main'
+      run: |
+        npm install -g @railway/cli
+        railway login --token ${{ secrets.RAILWAY_TOKEN }}
+        railway link ${{ secrets.RAILWAY_PROJECT }}
+        railway up
